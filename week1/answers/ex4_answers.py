@@ -7,30 +7,32 @@ Fill this in after running exercise4_mcp_client.py.
 # ── Basic results ──────────────────────────────────────────────────────────
 
 # Tool names as shown in "Discovered N tools" output.
-TOOLS_DISCOVERED = []
+TOOLS_DISCOVERED = ['search_venues', 'get_venue_details']
 
-QUERY_1_VENUE_NAME    = "FILL_ME_IN"
-QUERY_1_VENUE_ADDRESS = "FILL_ME_IN"
-QUERY_2_FINAL_ANSWER  = "FILL_ME_IN"
+QUERY_1_VENUE_NAME    = "The Haymarket Vaults"
+QUERY_1_VENUE_ADDRESS = "1 Dalry Road, Edinburgh"
+QUERY_2_FINAL_ANSWER  = "No venue that meet the 300 people capacity was found"
 
 # ── The experiment ─────────────────────────────────────────────────────────
 # Required: modify venue_server.py, rerun, revert.
 
-EX4_EXPERIMENT_DONE = None   # True or False
+EX4_EXPERIMENT_DONE = True   # True or False
 
 # What changed, and which files did or didn't need updating? Min 30 words.
 EX4_EXPERIMENT_RESULT = """
-FILL ME IN
+After changing The Albanach's status from 'available' to 'full', it was excluded from the search results during the MCP tool query. In the baseline run, both The Albanach and The Haymarket Vaults were returned as valid venue options. After the modification, only The Haymarket Vaults remained in the result set for Query 1. No changes were required in the LangGraph client, tool interface, or agent logic files. Only the backend MCP server data file (mcp_venue_server.py) was modified, confirming that system behavior changed solely due to external data state.
 """
 
 # ── MCP vs hardcoded ───────────────────────────────────────────────────────
 
-LINES_OF_TOOL_CODE_EX2 = 0   # count in exercise2_langgraph.py
-LINES_OF_TOOL_CODE_EX4 = 0   # count in exercise4_mcp_client.py
+LINES_OF_TOOL_CODE_EX2 = 302   # count in exercise2_langgraph.py
+LINES_OF_TOOL_CODE_EX4 = 291   # count in exercise4_mcp_client.py
 
 # What does MCP buy you beyond "the tools are in a separate file"? Min 30 words.
 MCP_VALUE_PROPOSITION = """
-FILL ME IN
+MCP provides a standard protocol for tool discovery, execution, and schema validation, rather than just separating tools into another file. 
+The agent can dynamically discover available tools at runtime, validate arguments through a structured interface, and invoke external services without hardcoding tool imports or function signatures. This makes tools reusable across different agents and allows backend changes (like venue availability or tool logic) to immediately affect behavior without modifying the LangGraph code. 
+It also enforces a clean boundary between reasoning (agent) and execution (tool server), improving modularity, scalability, and interoperability.
 """
 
 # ── PyNanoClaw architecture — SPECULATION QUESTION ─────────────────────────
@@ -70,11 +72,11 @@ FILL ME IN
 #     ambiguous task.
 
 WEEK_5_ARCHITECTURE = """
-- FILL ME IN
-- FILL ME IN
-- FILL ME IN
-- FILL ME IN
-- FILL ME IN
+- Planner: This sits in the autonomous loop and decomposes the user request into structured subtasks, deciding when to search, reason, or handoff to the structured-agent half.
+- Executor (LangGraph ReAct loop): This runs iterative reasoning and tool use over MCP tools like venue search, web search, and cost estimation in the autonomous loop half.
+- Shared MCP Tool Server: This provides dynamically discovered tools (venue lookup, weather, booking utilities) to both LangGraph and Rasa CALM without hardcoded bindings.
+- Structured Agent (Rasa CALM): This handles deterministic, auditable workflows such as booking confirmation, deposit validation, and human-facing phone-call style interactions.
+- Handoff Bridge: This transfers control between autonomous loop and structured agent depending on task type (research vs. confirmation) while preserving shared state.
 """
 
 # ── The guiding question ───────────────────────────────────────────────────
@@ -82,5 +84,9 @@ WEEK_5_ARCHITECTURE = """
 # Must reference specific things you observed in your runs. Min 60 words.
 
 GUIDING_QUESTION_ANSWER = """
-FILL ME IN
+In my runs, LangGraph with MCP was used for research-style tasks such as finding venues in Edinburgh. It handled tool calls dynamically, but I observed schema issues where the agent initially passed incorrect arguments before rectifying in the subsequent call. It also explored multiple venues and compared results.
+
+Rasa CALM was used for structured booking confirmation, where it followed a strict flow: guest count, vegan requirement, and deposit validation. From my observation, it correctly escalated when the deposit exceeded £300 and rejected out-of-scope requests like parking.
+
+Swapping them feels wrong because LangGraph is suited for exploratory, uncertain environments where tool selection and reasoning are flexible, while CALM is designed for strict, auditable business logic where deviations are not allowed. For instance, CALM enforced the deposit cut-off rule deterministically, while LangGraph struggled with enforcing such rigid constraints but excelled at discovery. This separation ensures reliability in the case of transactions and flexibility when it comes to research.
 """
