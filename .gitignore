@@ -116,6 +116,7 @@ rasa_action_server.log
 scratch/
 tmp/
 *.local.py
+*_output.txt
 
 # ── MCP & LangGraph ───────────────────────────────────────────────────────────
 # LangChain sometimes writes a SQLite trace store locally.
