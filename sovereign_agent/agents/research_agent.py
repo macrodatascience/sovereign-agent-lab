@@ -44,10 +44,15 @@ from __future__ import annotations
 
 import json
 import os
+import re
 
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
+
+from sovereign_agent.agents.planner import plan_task
+from sovereign_agent.tools.web_search import search_web
+from sovereign_agent.tools.file_ops import read_file, write_file
 
 from sovereign_agent.tools.venue_tools import (
     calculate_catering_cost,
@@ -90,6 +95,9 @@ TOOLS = [
     get_edinburgh_weather,
     calculate_catering_cost,
     generate_event_flyer,
+    search_web,
+    read_file,
+    write_file,
 ]
 
 # Build the agent once at module load time.
@@ -186,8 +194,26 @@ def run_research_agent(task: str, max_turns: int = 8) -> dict:
     This return shape is the contract that Week 2+ code depends on.
     Do not change the key names.
     """
+    
+    try:
+        plan = plan_task(task)
+        plan_text = "\n".join(plan[:4])
+
+        task_for_agent = f"""
+    Task: {task}
+
+    Execution hints:
+    {plan_text}
+
+    Execute directly using tools.
+    Do not explain your reasoning.
+    Do not think step-by-step out loud.
+    """
+    except Exception:
+        task_for_agent = task
+        
     result = _agent.invoke(
-        {"messages": [("user", task)]},
+        {"messages": [("user", task_for_agent)]},
         config={"recursion_limit": max_turns * 2},
     )
 
@@ -222,9 +248,11 @@ def run_research_agent(task: str, max_turns: int = 8) -> dict:
 
         # Capture the model's natural-language messages.
         if isinstance(content, str) and content and not calls:
-            full_trace.append({"role": msg_type, "content": content})
+            clean_content = re.sub(r"<think>.*?</think>", "", content, 
+                                       flags=re.DOTALL,).strip()
+            full_trace.append({"role": msg_type, "content": clean_content})
             if msg_type == "ai":
-                final_answer = content
+                final_answer = clean_content
 
     return {
         "final_answer": final_answer,
