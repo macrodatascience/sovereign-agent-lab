@@ -157,4 +157,5 @@ __marimo__/
 
 scripts/
 _transient-files/
-tests/
+tests/memory/
+logs/
