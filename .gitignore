@@ -159,3 +159,4 @@ scripts/
 _transient-files/
 tests/memory/
 logs/
+memory/
