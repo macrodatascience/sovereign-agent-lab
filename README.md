@@ -159,6 +159,80 @@ sovereign-agent-lab/
         └── actions.py         ← deterministic business rules in Python
 ```
 
+
+## PyNanoClaw MVP Implementation
+
+This repository now includes a working PyNanoClaw MVP architecture:
+
+## PyNanoClaw Architecture
+
+Tasks requiring deterministic business-rule handling are routed to the structured-agent handoff layer instead of the autonomous executor.
+
+PyNanoClaw combines:
+
+* Autonomous reasoning loop (LangGraph)
+* Structured deterministic agent patterns
+* Shared tool layer
+* Memory
+* Observability
+* Handoff orchestration
+
+
+```text
+pynanoclaw/
+├── agents/
+│   ├── planner.py
+│   └── executor.py
+├── memory/
+│   └── persistent_store.py
+├── bridge/
+│   └── handoff.py
+├── observability/
+│   └── tracing.py
+└── main.py
+```
+
+### Components Implemented
+
+* Planner agent (`pynanoclaw/agents/planner.py`)
+* Executor agent (`pynanoclaw/agents/executor.py`)
+* Persistent memory layer (`pynanoclaw/memory/persistent_store.py`)
+* Structured-agent handoff bridge (`pynanoclaw/bridge/handoff.py`)
+* Observability + tracing (`pynanoclaw/observability/tracing.py`)
+* Main orchestration runtime (`pynanoclaw/main.py`)
+
+### Example Usage
+
+Run autonomous execution:
+
+```bash
+uv run python -c "from pynanoclaw.main import run_pynanoclaw; print(run_pynanoclaw('Find Edinburgh venue for 160 people with vegan options'))"
+```
+
+### Example output: 
+```json 
+{
+  'final_answer': 'The Albanach and The Haymarket Vaults both meet the requirements for your event. Here are the details:\n\n1. **The Albanach**\n   - Address: 2 Hunter Square, Edinburgh\n   - Capacity: 180\n   - Vegan Options: Available\n   - Status: Available\n\n2. **The Haymarket Vaults**\n   - Address: 1 Dalry Road, Edinburgh\n   - Capacity: 160\n   - Vegan Options: Available\n   - Status: Available\n\nWould you like to proceed with one of these venues?', 
+  
+  'tool_calls_made': [
+    {
+      'tool': 'check_pub_availability', 
+      'args': {'pub_name': 'The Albanach', 'required_capacity': 160, 'requires_vegan': True}
+    }, 
+    {
+      'tool': 'check_pub_availability', 
+      'args': {'pub_name': 'The Haymarket Vaults', 'required_capacity': 160, 'requires_vegan': True}
+    }
+  ], 
+  'success': True
+}
+```
+Run structured-agent handoff:
+
+```bash
+uv run python -c "from pynanoclaw.main import run_pynanoclaw; print(run_pynanoclaw('confirm booking with manager and deposit'))"
+```
+
 ---
 
 ## Setup — run once
@@ -539,3 +613,4 @@ The grader checks:
 Run `make check-submit` before pushing — it tells you exactly what is
 missing. See `GRADING_OVERVIEW.md` for the full 30/40/30 point breakdown
 and `CHANGELOG.md` for the list of fixes landed since the initial release.
+
